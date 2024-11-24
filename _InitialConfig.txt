@@ -1,0 +1,28 @@
+--- Configuración de Java 20 ---
+
+Debido a que Android Studio Ladybug ya no usa el JDK 17 y Tiene Gradle 8.3,
+Hice la siguiente configuración:
+
+1. Instalar Java SDK 20 ("20" porque es compatible con Gradle).
+
+2. Crear o editar la variable JAVA_HOME y coloca la ruta a Java 20.
+
+3. Configura Flutter para Usar Java 20:
+    
+    -> flutter config --jdk-dir "C:\Program Files\Java\jdk-17.x"
+
+4. Actualiza build.gradle en el Proyecto de Flutter:
+
+    -> android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // Si usas Kotlin
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+5. Reinicia Android Studio y VS Code.

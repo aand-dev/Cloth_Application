@@ -1,0 +1,5 @@
+--- Config ---
+
+La carpeta config se utiliza para almacenar archivos y configuraciones globales que serán utilizados a lo largo de la 
+aplicación. Estos archivos ayudan a centralizar la gestión de constantes y configuraciones, mejorando la mantenibilidad y 
+claridad del proyecto.

@@ -1,0 +1,3 @@
+--- Utils ---
+
+Esta carpeta se utiliza para herramientas, helpers, y funciones auxiliares que pueden ser usadas en múltiples partes del proyecto.
