@@ -1,191 +1,243 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:stock_application/providers/product_provider.dart';
+import 'package:stock_application/config/routes.dart';
+import '../providers/inventory_provider.dart';
+import '../widgets/product_card.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _InventoryScreenState createState() => _InventoryScreenState();
+  State<InventoryScreen> createState() => _InventoryScreenState();
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
+  late Future<void> _loadProductsFuture;
+  String _searchQuery = '';
+  String _selectedCategory = '';
+  String _selectedSize = '';
+  String _selectedColor = '';
+
   @override
   void initState() {
     super.initState();
-    // Ejecuta loadProducts() después de que el widget esté completamente construido
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ProductProvider>(context, listen: false).loadProducts();
-    });
+    _loadProductsFuture =
+        Provider.of<InventoryProvider>(context, listen: false).loadProducts();
+  }
+
+  Future<void> _refreshProducts() async {
+    try {
+      await Provider.of<InventoryProvider>(context, listen: false)
+          .loadProducts();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lista de productos actualizada.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al actualizar: $e')),
+      );
+    }
+  }
+
+  void _scanQRCode() {
+    Navigator.pushNamed(
+      context,
+      AppRoutes.qrScanner,
+      arguments: (productId) {
+        if (productId.isNotEmpty && mounted) {
+          Navigator.pop(context); // Cierra QRScannerScreen
+          Navigator.pushNamed(
+            context,
+            AppRoutes.productDetails,
+            arguments: int.tryParse(productId),
+          );
+        }
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<ProductProvider>(context);
+    final inventoryProvider = Provider.of<InventoryProvider>(context);
+
+    final filteredProducts = inventoryProvider.products.where((product) {
+      final matchesSearchQuery = _searchQuery.isEmpty ||
+          product.name.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesCategory =
+          _selectedCategory.isEmpty || product.category == _selectedCategory;
+      final matchesSize = _selectedSize.isEmpty ||
+          product.variants.any((variant) => variant.size == _selectedSize);
+      final matchesColor = _selectedColor.isEmpty ||
+          product.variants.any((variant) => variant.color == _selectedColor);
+
+      return matchesSearchQuery &&
+          matchesCategory &&
+          matchesSize &&
+          matchesColor;
+    }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8F9),
       appBar: AppBar(
-        title: const Text(
-          'Gestión de Inventario',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Gestión de Inventario'),
         centerTitle: true,
         automaticallyImplyLeading: false,
-        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Barra de búsqueda
-            Container(
-              color: const Color(0xFFEBEDED),
-              height: 36,
-              child: TextField(
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.symmetric(),
-                  hintText: 'Buscar productos...',
-                  hintStyle: const TextStyle(fontSize: 14),
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: const Icon(Icons.mic),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(4),
+      body: Column(
+        children: [
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Buscar productos...',
+                      border: OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.qr_code_scanner),
+                        onPressed: _scanQRCode,
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
                   ),
                 ),
-              ),
+              ],
             ),
-            const SizedBox(height: 16),
-
-            // Filtros
-            const SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  FilterButton(label: 'Categoría'),
-                  SizedBox(width: 8),
-                  FilterButton(label: 'Tamaño'),
-                  SizedBox(width: 8),
-                  FilterButton(label: 'Color'),
-                  SizedBox(width: 8),
-                  FilterButton(label: 'Marca'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Lista de productos
-            Expanded(
-              child: provider.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      itemCount: provider.products.length,
-                      itemBuilder: (context, index) {
-                        final product = provider.products[index];
-                        return ProductCard(product: product);
-                      },
-                    ),
-            ),
-
-            // Botón de Escanear Producto
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Actualizar Stock',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        // Acción de escanear producto
-                      },
-                      icon: const Icon(Icons.qr_code_scanner),
-                      label: const Text('Escanear Producto'),
-                      style: ElevatedButton.styleFrom(
-                          textStyle: const TextStyle(color: Color(0xFF2D5EC6)),
-                          backgroundColor: const Color(0xFFDEEAFF),
-                          iconColor: const Color(0xFF2D5EC6),
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12, horizontal: 20),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          side: const BorderSide(color: Color(0xFF82A7EF))),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Widget para el botón de filtro
-class FilterButton extends StatelessWidget {
-  final String label;
-
-  const FilterButton({super.key, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 32,
-      child: OutlinedButton(
-        onPressed: () {
-          // Acción del filtro
-        },
-        style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
           ),
-        ),
-        child: Text(label),
+          // Dropdown Filters
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedCategory.isEmpty ? null : _selectedCategory,
+                    hint: const Text('Categoría'),
+                    items: [
+                      const DropdownMenuItem(
+                        value: '',
+                        child: Text('Todos'),
+                      ),
+                      ...['Categoría 1', 'Categoría 2', 'Categoría 3']
+                          .map((category) => DropdownMenuItem(
+                                value: category,
+                                child: Text(category),
+                              )),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategory = value ?? '';
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedSize.isEmpty ? null : _selectedSize,
+                    hint: const Text('Tamaño'),
+                    items: [
+                      const DropdownMenuItem(
+                        value: '',
+                        child: Text('Todos'),
+                      ),
+                      ...['S', 'M', 'L', 'XL'].map((size) => DropdownMenuItem(
+                            value: size,
+                            child: Text(size),
+                          )),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedSize = value ?? '';
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedColor.isEmpty ? null : _selectedColor,
+                    hint: const Text('Color'),
+                    items: [
+                      const DropdownMenuItem(
+                        value: '',
+                        child: Text('Todos'),
+                      ),
+                      ...['Rojo', 'Azul', 'Verde']
+                          .map((color) => DropdownMenuItem(
+                                value: color,
+                                child: Text(color),
+                              )),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedColor = value ?? '';
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Product List
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _refreshProducts,
+              child: FutureBuilder<void>(
+                future: _loadProductsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(
+                      child: Text('Error: ${snapshot.error}'),
+                    );
+                  } else if (filteredProducts.isEmpty) {
+                    return const Center(
+                      child: Text('No se encontraron productos.'),
+                    );
+                  } else {
+                    return ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: filteredProducts.length,
+                      itemBuilder: (context, index) {
+                        final product = filteredProducts[index];
+                        return ProductCard(
+                          product: product,
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.productDetails,
+                              arguments: product.id,
+                            );
+                          },
+                        );
+                      },
+                    );
+                  }
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, AppRoutes.addProduct);
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
-}
+} // Para parsear JSON
 
-// Widget para la tarjeta del producto
-class ProductCard extends StatelessWidget {
-  final dynamic product;
-
-  const ProductCard({super.key, required this.product});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        leading: Image.network(product.image,
-            width: 50, height: 50, fit: BoxFit.cover),
-        title: Text(
-          product.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-            'Categoría: ${product.category} \nStock: ${product.ratingCount}'),
-        trailing: const Icon(Icons.qr_code_scanner),
-      ),
-    );
-  }
-}

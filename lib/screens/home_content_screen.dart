@@ -111,7 +111,26 @@ class HomeContentScreen extends StatelessWidget {
   }) {
     return GestureDetector(
       onTap: () {
-        // Implementar acción para cada card
+        switch (title) {
+          case 'Empleados':
+            Navigator.pushNamed(
+                context, '/employees'); // Navegar al módulo de empleados
+            break;
+          case 'Ventas':
+            Navigator.pushNamed(
+                context, '/sales'); // Navegar al módulo de ventas
+            break;
+          case 'Productos':
+            Navigator.pushNamed(
+                context, '/product-details'); // Ejemplo: Navegar a productos
+            break;
+          case 'Proveedores':
+            Navigator.pushNamed(
+                context, '/proveedor-list'); // Ejemplo: Navegar a productos
+            break;
+          default:
+            debugPrint('Acción no definida para $title');
+        }
       },
       child: Container(
         width: (MediaQuery.of(context).size.width - 48) / 2,

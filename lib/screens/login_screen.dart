@@ -124,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                    labelText: 'Correo Electrónico',
+                    labelText: 'Nombre de usuario',
                     border: OutlineInputBorder(),
                     errorText: _emailError,
                     errorMaxLines: 4 // Mostrar mensaje de error específico

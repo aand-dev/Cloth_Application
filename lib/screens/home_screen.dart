@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:stock_application/screens/client_screen.dart';
 import 'package:stock_application/screens/inventory_screen.dart';
+import 'package:stock_application/screens/sales_screen.dart';
 import 'home_content_screen.dart'; // Importa el contenido principal del Home
 import 'settings_screen.dart'; // Pantalla de Configuración
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -15,8 +19,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = [
     HomeContentScreen(), // Contenido principal del Home
     InventoryScreen(), // Pantalla de Inventario
-    Text('2'), // Pantalla de Ventas
-    Text('3'), // Pantalla de Clientes
+    SalesScreen(), // Pantalla de Ventas
+    ClientScreen(), // Pantalla de Clientes
     SettingsScreen(), // Pantalla de Configuración
   ];
 
