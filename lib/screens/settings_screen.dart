@@ -4,6 +4,8 @@ import 'package:stock_application/services/auth_service.dart';
 class SettingsScreen extends StatelessWidget {
   final AuthService _authService = AuthService();
 
+  SettingsScreen({super.key});
+
   Future<void> _logout(BuildContext context) async {
     await _authService.logout();
     Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
@@ -100,7 +102,7 @@ class SettingsScreen extends StatelessWidget {
             },
           ),
           const Divider(),
-          Spacer(),
+
           // Versión de la aplicación
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -116,7 +118,7 @@ class SettingsScreen extends StatelessWidget {
             onPressed: () => _logout(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
-              side: BorderSide(color: Colors.red),
+              side: const BorderSide(color: Colors.red),
               minimumSize: const Size(double.infinity, 48),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4),

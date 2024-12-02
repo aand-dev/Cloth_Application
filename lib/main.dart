@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:stock_application/config/routes.dart';
-import 'package:stock_application/providers/product_provider.dart';
+import 'package:stock_application/providers/inventory_provider.dart';
+import 'package:stock_application/providers/sales_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +15,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => ProductProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => InventoryProvider()),
+        ChangeNotifierProvider(create: (_) => SalesProvider()),
+      ],
       child: MaterialApp(
           title: 'Stock',
           theme: ThemeData(

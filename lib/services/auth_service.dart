@@ -20,10 +20,6 @@ class AuthService {
       }),
     );
 
-    // Imprime la respuesta del servidor para depuración
-    print('Response Code: ${response.statusCode}');
-    print('Response Body: ${response.body}');
-
     if (response.statusCode == 200) {
       // Analiza la respuesta del servidor
       final responseData = jsonDecode(response.body);
